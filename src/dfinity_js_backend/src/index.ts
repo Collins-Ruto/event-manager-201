@@ -322,6 +322,12 @@ export default Canister({
         tickets: user.tickets.concat(ticket.id),
       };
 
+      // increase event sold ticket count
+      event.soldAmount += 1n;
+
+      // update event in storage
+      eventsStorage.insert(event.id, event);
+
       try {
         eventTickets.insert(ticket.id, ticket);
         usersStorage.insert(payload.userId, updatedUser);

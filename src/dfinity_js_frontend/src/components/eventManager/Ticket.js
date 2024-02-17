@@ -24,7 +24,9 @@ const Ticket = ({ ticket }) => {
         </Card.Header>
         <Card.Body className="d-flex  flex-column text-center">
           <Card.Text className="flex-grow-1 ">eventId: {eventId}</Card.Text>
-          <Card.Text className="flex-grow-1 ">price: {price}</Card.Text>
+          <Card.Text className="flex-grow-1 ">
+            price: {(price / BigInt(10 ** 8)).toString()} ICP
+          </Card.Text>
           <Card.Text className="flex-grow-1 ">userId: {userId}</Card.Text>
           <Card.Text className="flex-grow-1 ">userName: {userName}</Card.Text>
           <Card.Text className="flex-grow-1 ">userEmail: {userEmail}</Card.Text>

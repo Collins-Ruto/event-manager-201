@@ -48,11 +48,16 @@ const Event = ({ event, buy, reserve }) => {
         </div>
         <Card.Body className="d-flex  flex-column text-center">
           <Card.Title>{title}</Card.Title>
-          <Card.Text className="flex-grow-1 ">{description}</Card.Text>
-          <Card.Text className="flex-grow-1 ">{date}</Card.Text>
-          <Card.Text className="flex-grow-1 ">{startTime}</Card.Text>
+          <Card.Text className="flex-grow-1 ">
+            description: {description}
+          </Card.Text>
+          <Card.Text className="flex-grow-1 ">date: {date}</Card.Text>
+          <Card.Text className="flex-grow-1 ">
+            price: {(price / BigInt(10 ** 8)).toString()} ICP
+          </Card.Text>
+          <Card.Text className="flex-grow-1 ">startTime: {startTime}</Card.Text>
           <Card.Text className="text-secondary">
-            <span>{location}</span>
+            <span>location: {location}</span>
           </Card.Text>
           {/* Router Link to send user to tickets page passing the eventid as search param */}
           <Link

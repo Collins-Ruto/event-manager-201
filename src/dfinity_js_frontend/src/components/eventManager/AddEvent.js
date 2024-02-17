@@ -122,7 +122,7 @@ const AddEvent = ({ save }) => {
               className="mb-3"
             >
               <Form.Control
-                type="text"
+                type="number"
                 placeholder="Price"
                 onChange={(e) => {
                   setPrice(e.target.value);
