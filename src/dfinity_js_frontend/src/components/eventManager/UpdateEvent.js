@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Button, Modal, Form, FloatingLabel } from "react-bootstrap";
+import { Button, Modal, Form, FloatingLabel, Stack } from "react-bootstrap";
 
 const Update = ({ event, save }) => {
   const [description, setDescription] = useState(event.description);
@@ -7,7 +7,7 @@ const Update = ({ event, save }) => {
   const [startTime, setStartTime] = useState(event.startTime);
   const [attachmentURL, setImage] = useState(event.attachmentURL);
   const [location, setLocation] = useState(event.location);
-  const [maxSlots, setMaxSlots] = useState(event.maxSlots);
+  const [maxSlots, setMaxSlots] = useState(event.maxSlots / BigInt(10 ** 8));
   const isFormFilled = () =>
     startTime && date && attachmentURL && description && maxSlots && location;
 
@@ -28,7 +28,10 @@ const Update = ({ event, save }) => {
       </Button>
       <Modal show={show} onHide={handleClose} centered>
         <Modal.Header closeButton>
-          <Modal.Title>New Event</Modal.Title>
+          <Stack>
+            <Modal.Title>New Event</Modal.Title>
+            <span>you can leave blank for unchanged values</span>
+          </Stack>
         </Modal.Header>
         <Form>
           <Modal.Body>

@@ -1,7 +1,7 @@
 import React, { useState } from "react";
-import { Button, Modal, Form, FloatingLabel } from "react-bootstrap";
+import { Button, Modal, Form, Stack, FloatingLabel } from "react-bootstrap";
 
-const UpdateUser = ({ user, save }) => {
+const AddUser = ({ user, save }) => {
   const [email, setEmail] = useState(user.email);
   const [phone, setPhone] = useState(user.phone);
   const [address, setAddress] = useState(user.address);
@@ -25,18 +25,21 @@ const UpdateUser = ({ user, save }) => {
       </Button>
       <Modal show={show} onHide={handleClose} centered>
         <Modal.Header closeButton>
-          <Modal.Title>New User</Modal.Title>
+          <Stack>
+            <Modal.Title>Update User</Modal.Title>
+            <span>you can leave blank for unchanged values</span>
+          </Stack>
         </Modal.Header>
         <Form>
           <Modal.Body>
             <FloatingLabel
               controlId="inputPhone"
-              label={user.Phone}
+              label="Phone"
               className="mb-3"
             >
               <Form.Control
                 type="number"
-                placeholder={user.phone}
+                placeholder="Phone"
                 onChange={(e) => {
                   setPhone(e.target.value);
                 }}
@@ -45,12 +48,12 @@ const UpdateUser = ({ user, save }) => {
 
             <FloatingLabel
               controlId="inputAddress"
-              label={user.address}
+              label="Address"
               className="mb-3"
             >
               <Form.Control
                 type="text"
-                placeholder={user.Address}
+                placeholder="Address"
                 onChange={(e) => {
                   setAddress(e.target.value);
                 }}
@@ -58,12 +61,12 @@ const UpdateUser = ({ user, save }) => {
             </FloatingLabel>
             <FloatingLabel
               controlId="inputEmail"
-              label={user.email}
+              label="Email"
               className="mb-3"
             >
               <Form.Control
                 as="textarea"
-                placeholder={user.email}
+                placeholder="email"
                 style={{ height: "80px" }}
                 onChange={(e) => {
                   setEmail(e.target.value);
@@ -97,4 +100,4 @@ const UpdateUser = ({ user, save }) => {
   );
 };
 
-export default UpdateUser;
+export default AddUser;
