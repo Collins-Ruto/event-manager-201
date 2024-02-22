@@ -8,7 +8,7 @@ This is a comprehensive system for managing events, tickets, and user interactio
 
 ### 1. Data Structures
 
-- **Event**: Represents an event with properties like `id`, `title`, `description`, `date`, `startTime`, `attachmentURL`, `location`, `price`, `seller`, and `soldAmount`.
+- **Event**: Represents an event with properties like `id`, `title`, `description`, `date`, `startTime`, `attachmentURL`, `location`, `price`, `seller`, and `reservedAmount`.
 - **EventPayload**: Used for creating or updating an event with necessary properties.
 - **Ticket**: Represents a ticket with properties like `id`, `eventId`, `price`, and `userId`.
 - **User**: Represents a user with properties like `id`, `name`, `email`, `phone`, `address`, and `tickets`.

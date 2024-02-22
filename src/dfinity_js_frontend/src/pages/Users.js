@@ -1,7 +1,6 @@
-import React, { useEffect, useCallback, useState } from "react";
+import React from "react";
 import { Container, Nav } from "react-bootstrap";
 import { login, logout as destroy } from "../utils/auth";
-import { balance as principalBalance } from "../utils/ledger";
 import Wallet from "../components/Wallet";
 import Users from "../components/userManager/Users";
 import Cover from "../components/utils/Cover";
@@ -13,18 +12,6 @@ const UsersPage = () => {
 
   const principal = window.auth.principalText;
 
-  const [balance, setBalance] = useState("0");
-
-  const getBalance = useCallback(async () => {
-    if (isAuthenticated) {
-      setBalance(await principalBalance());
-    }
-  });
-
-  useEffect(() => {
-    getBalance();
-  }, [getBalance]);
-
   return (
     <>
       <Notification />
@@ -34,7 +21,6 @@ const UsersPage = () => {
             <Nav.Item>
               <Wallet
                 principal={principal}
-                balance={balance}
                 symbol={"ICP"}
                 isAuthenticated={isAuthenticated}
                 destroy={destroy}

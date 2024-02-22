@@ -5,6 +5,10 @@ export async function createEvent(event) {
   return window.canister.eventManager.addEvent(event);
 }
 
+export async function updateEvent(event) {
+  return window.canister.eventManager.updateEvent(event);
+}
+
 export async function reserveEvent(ticket) {
   return window.canister.eventManager.createTicket(ticket);
 }

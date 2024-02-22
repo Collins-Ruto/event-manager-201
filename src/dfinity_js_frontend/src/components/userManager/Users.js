@@ -5,7 +5,11 @@ import User from "./User";
 import Loader from "../utils/Loader";
 import { Row } from "react-bootstrap";
 import { NotificationSuccess, NotificationError } from "../utils/Notifications";
-import { getUsers as getUserList, createUser } from "../../utils/userManager";
+import {
+  getUsers as getUserList,
+  createUser,
+  updateUser,
+} from "../../utils/userManager";
 import { Link } from "react-router-dom";
 
 const Users = () => {
@@ -28,6 +32,21 @@ const Users = () => {
     try {
       setLoading(true);
       createUser(data).then((resp) => {
+        getUsers();
+      });
+      toast(<NotificationSuccess text="User added successfully." />);
+    } catch (error) {
+      console.log({ error });
+      toast(<NotificationError text="Failed to create a user." />);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const update = async (data) => {
+    try {
+      setLoading(true);
+      updateUser(data).then((resp) => {
         getUsers();
       });
       toast(<NotificationSuccess text="User added successfully." />);
@@ -67,6 +86,7 @@ const Users = () => {
                 user={{
                   ..._user,
                 }}
+                update={update}
               />
             ))}
           </Row>

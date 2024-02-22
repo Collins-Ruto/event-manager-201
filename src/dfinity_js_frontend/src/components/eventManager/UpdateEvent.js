@@ -1,23 +1,15 @@
 import React, { useState } from "react";
-import PropTypes from "prop-types";
 import { Button, Modal, Form, FloatingLabel } from "react-bootstrap";
 
-const AddEvent = ({ save }) => {
-  const [title, setTitle] = useState("");
-  const [description, setDescription] = useState("");
-  const [date, setDate] = useState("");
-  const [startTime, setStartTime] = useState("");
-  const [attachmentURL, setImage] = useState("");
-  const [location, setLocation] = useState("");
-  const [maxSlots, setMaxSlots] = useState(0);
+const Update = ({ event, save }) => {
+  const [description, setDescription] = useState(event.description);
+  const [date, setDate] = useState(event.date);
+  const [startTime, setStartTime] = useState(event.startTime);
+  const [attachmentURL, setImage] = useState(event.attachmentURL);
+  const [location, setLocation] = useState(event.location);
+  const [maxSlots, setMaxSlots] = useState(event.maxSlots);
   const isFormFilled = () =>
-    title &&
-    startTime &&
-    date &&
-    attachmentURL &&
-    description &&
-    maxSlots &&
-    location;
+    startTime && date && attachmentURL && description && maxSlots && location;
 
   const [show, setShow] = useState(false);
 
@@ -29,10 +21,10 @@ const AddEvent = ({ save }) => {
       <Button
         onClick={handleShow}
         variant="dark"
-        className="rounded-pill px-0"
-        style={{ width: "38px" }}
+        className="rounded-pill"
+        // style={{ width: "38px" }}
       >
-        <i className="bi bi-plus"></i>
+        Update <i className="bi bi-pencil-square"></i>
       </Button>
       <Modal show={show} onHide={handleClose} centered>
         <Modal.Header closeButton>
@@ -40,19 +32,6 @@ const AddEvent = ({ save }) => {
         </Modal.Header>
         <Form>
           <Modal.Body>
-            <FloatingLabel
-              controlId="inputName"
-              label="Event title"
-              className="mb-3"
-            >
-              <Form.Control
-                type="text"
-                onChange={(e) => {
-                  setTitle(e.target.value);
-                }}
-                placeholder="Enter title of event"
-              />
-            </FloatingLabel>
             <FloatingLabel
               controlId="inputUrl"
               label="Image URL"
@@ -139,7 +118,7 @@ const AddEvent = ({ save }) => {
             disabled={!isFormFilled()}
             onClick={() => {
               save({
-                title,
+                id: event.id,
                 description,
                 location,
                 startTime,
@@ -158,8 +137,4 @@ const AddEvent = ({ save }) => {
   );
 };
 
-AddEvent.propTypes = {
-  save: PropTypes.func.isRequired,
-};
-
-export default AddEvent;
+export default Update;

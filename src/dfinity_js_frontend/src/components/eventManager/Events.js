@@ -11,7 +11,7 @@ import {
   getEvents as getEventList,
   createEvent,
   reserveEvent,
-  buyEvent,
+  updateEvent,
 } from "../../utils/eventManager";
 
 const Events = () => {
@@ -33,12 +33,12 @@ const Events = () => {
   const addEvent = async (data) => {
     try {
       setLoading(true);
-      const priceStr = data.price;
-      data.price = parseInt(priceStr, 10) * 10 ** 8;
+      const maxSlotsStr = data.maxSlots;
+      data.maxSlots = parseInt(maxSlotsStr, 10) * 10 ** 8;
       createEvent(data).then((resp) => {
         getEvents();
+        toast(<NotificationSuccess text="Event added successfully." />);
       });
-      toast(<NotificationSuccess text="Event added successfully." />);
     } catch (error) {
       console.log({ error });
       toast(<NotificationError text="Failed to create a event." />);
@@ -47,28 +47,11 @@ const Events = () => {
     }
   };
 
-  //  function to initiate transaction
-  const buy = async (id) => {
-    try {
-      setLoading(true);
-      await buyEvent({
-        id,
-      }).then((resp) => {
-        getEvents();
-        toast(<NotificationSuccess text="Event bought successfully" />);
-      });
-    } catch (error) {
-      toast(<NotificationError text="Failed to purchase event." />);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  //  function to initiate transaction
+  //  function to reserve book
   const reserve = async (ticket) => {
     try {
       setLoading(true);
-      await reserveEvent(ticket).then((resp) => {
+      reserveEvent(ticket).then((resp) => {
         getEvents();
         toast(
           <NotificationSuccess text="Event reserved successfully, check users tab for your tickets" />
@@ -76,6 +59,23 @@ const Events = () => {
       });
     } catch (error) {
       toast(<NotificationError text="Failed to reserve event." />);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const update = async (data) => {
+    try {
+      setLoading(true);
+      const maxSlotsStr = data.maxSlots;
+      data.maxSlots = parseInt(maxSlotsStr, 10) * 10 ** 8;
+      updateEvent(data).then((resp) => {
+        getEvents();
+        toast(<NotificationSuccess text="Event added successfully." />);
+      });
+    } catch (error) {
+      console.log({ error });
+      toast(<NotificationError text="Failed to create a event." />);
     } finally {
       setLoading(false);
     }
@@ -109,8 +109,8 @@ const Events = () => {
                 event={{
                   ..._event,
                 }}
-                buy={buy}
                 reserve={reserve}
+                update={update}
               />
             ))}
           </Row>

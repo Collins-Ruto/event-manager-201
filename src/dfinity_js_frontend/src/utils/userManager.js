@@ -2,6 +2,10 @@ export async function createUser(user) {
   return window.canister.eventManager.addUser(user);
 }
 
+export async function updateUser(user) {
+  return window.canister.eventManager.updateUser(user);
+}
+
 export async function getUsers() {
   try {
     return await window.canister.eventManager.getUsers();

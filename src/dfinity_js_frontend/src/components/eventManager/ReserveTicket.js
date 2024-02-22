@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import PropTypes from "prop-types";
 import { Button, Modal, Form, FloatingLabel } from "react-bootstrap";
 
-const ReserveTicket = ({ reserve }) => {
+const ReserveTicket = ({ reserve, available }) => {
   const [userId, setUserId] = useState("");
 
   const isFormFilled = () => userId;
@@ -14,50 +14,58 @@ const ReserveTicket = ({ reserve }) => {
 
   return (
     <>
-      <Button
-        onClick={handleShow}
-        variant="outline-dark"
-        className="w-100 py-3"
-      >
-        Reserve Ticket
-      </Button>
-      <Modal show={show} onHide={handleClose} centered>
-        <Modal.Header closeButton>
-          <Modal.Title>New Event</Modal.Title>
-        </Modal.Header>
-        <Form>
-          <Modal.Body>
-            <FloatingLabel
-              controlId="inputUserId"
-              label="userId"
-              className="mb-3"
-            >
-              <Form.Control
-                type="text"
-                onChange={(e) => {
-                  setUserId(e.target.value);
-                }}
-                placeholder="Enter your userId"
-              />
-            </FloatingLabel>
-          </Modal.Body>
-        </Form>
-        <Modal.Footer>
-          <Button variant="outline-secondary" onClick={handleClose}>
-            Close
-          </Button>
+      {!available ? (
+        <Button disabled={true} variant="outline-dark" className="w-100 py-3">
+          No Slots available
+        </Button>
+      ) : (
+        <>
           <Button
-            variant="dark"
-            disabled={!isFormFilled()}
-            onClick={() => {
-              reserve(userId);
-              handleClose();
-            }}
+            onClick={handleShow}
+            variant="outline-dark"
+            className="w-100 py-3"
           >
             Reserve Ticket
           </Button>
-        </Modal.Footer>
-      </Modal>
+          <Modal show={show} onHide={handleClose} centered>
+            <Modal.Header closeButton>
+              <Modal.Title>New Event</Modal.Title>
+            </Modal.Header>
+            <Form>
+              <Modal.Body>
+                <FloatingLabel
+                  controlId="inputUserId"
+                  label="userId"
+                  className="mb-3"
+                >
+                  <Form.Control
+                    type="text"
+                    onChange={(e) => {
+                      setUserId(e.target.value);
+                    }}
+                    placeholder="Enter your userId"
+                  />
+                </FloatingLabel>
+              </Modal.Body>
+            </Form>
+            <Modal.Footer>
+              <Button variant="outline-secondary" onClick={handleClose}>
+                Close
+              </Button>
+              <Button
+                variant="dark"
+                disabled={!isFormFilled()}
+                onClick={() => {
+                  reserve(userId);
+                  handleClose();
+                }}
+              >
+                Reserve Ticket
+              </Button>
+            </Modal.Footer>
+          </Modal>
+        </>
+      )}
     </>
   );
 };
