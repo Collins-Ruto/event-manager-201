@@ -141,52 +141,8 @@ export default Canister({
     return Ok(event);
   }),
 
-  addUser: update([UserPayload], Result(User, ErrorType), (payload) => {
-    if (typeof payload !== "object" || Object.keys(payload).length === 0) {
-      return Err({ NotFound: "invalid payoad" });
-    }
-    const user = {
-      id: uuidv4(),
-      tickets: [],
-      ...payload,
-    };
-    usersStorage.insert(user.id, user);
-    return Ok(user);
-  }),
-
   getEvents: query([], Vec(Event), () => {
     return eventsStorage.values();
-  }),
-
-  getTickets: query([], Vec(Ticket), () => {
-    return eventTickets.values();
-  }),
-
-  // get tickets per event
-  getEventTickets: query([text], Vec(TicketReturn), (id) => {
-    const eventOpt = eventsStorage.get(id);
-    if ("None" in eventOpt) {
-      return [];
-    }
-    const event = eventOpt.Some;
-    const tickets = eventTickets.values();
-    return tickets
-      .filter((ticket) => {
-        return ticket.eventId === event.id;
-      })
-      .map((ticket) => {
-        const userOpt = usersStorage.get(ticket.userId);
-
-        return {
-          id: ticket.id,
-          eventId: event.id,
-          eventName: event.title,
-          userId: ticket.userId,
-          userName: userOpt.Some.name,
-          userEmail: userOpt.Some.email,
-          userPhone: userOpt.Some.phone,
-        };
-      });
   }),
 
   getEvent: query([text], Result(Event, ErrorType), (id) => {
@@ -195,18 +151,6 @@ export default Canister({
       return Err({ NotFound: `event with id=${id} not found` });
     }
     return Ok(eventOpt.Some);
-  }),
-
-  getUsers: query([], Vec(User), () => {
-    return usersStorage.values();
-  }),
-
-  getUser: query([text], Result(User, ErrorType), (id) => {
-    const userOpt = usersStorage.get(id);
-    if ("None" in userOpt) {
-      return Err({ NotFound: `user with id=${id} not found` });
-    }
-    return Ok(userOpt.Some);
   }),
 
   updateEvent: update(
@@ -226,6 +170,49 @@ export default Canister({
       return Ok(updatedEvent);
     }
   ),
+
+  addUser: update([UserPayload], Result(User, ErrorType), (payload) => {
+    if (typeof payload !== "object" || Object.keys(payload).length === 0) {
+      return Err({ NotFound: "invalid payoad" });
+    }
+    const user = {
+      id: uuidv4(),
+      tickets: [],
+      ...payload,
+    };
+    usersStorage.insert(user.id, user);
+    return Ok(user);
+  }),
+
+  getUsers: query([], Vec(User), () => {
+    return usersStorage.values();
+  }),
+
+  getUser: query([text], Result(User, ErrorType), (id) => {
+    const userOpt = usersStorage.get(id);
+    if ("None" in userOpt) {
+      return Err({ NotFound: `user with id=${id} not found` });
+    }
+    return Ok(userOpt.Some);
+  }),
+  
+  // get events reserved by user
+  getUserEvents: query([text], Vec(Event), (id) => {
+    const userOpt = usersStorage.get(id);
+    if ("None" in userOpt) {
+      return [];
+    }
+    const user = userOpt.Some;
+    const tickets = eventTickets.values();
+    return tickets
+      .filter((ticket) => {
+        return ticket.userId === user.id;
+      })
+      .map((ticket) => {
+        const eventOpt = eventsStorage.get(ticket.eventId);
+        return eventOpt.Some;
+      });
+  }),
 
   updateUser: update(
     [UpdateUserPayload],
@@ -302,6 +289,63 @@ export default Canister({
       return Ok(returnTicket);
     }
   ),
+
+  getTickets: query([], Vec(Ticket), () => {
+    return eventTickets.values();
+  }),
+
+  // get tickets per event
+  getEventTickets: query([text], Vec(TicketReturn), (id) => {
+    const eventOpt = eventsStorage.get(id);
+    if ("None" in eventOpt) {
+      return [];
+    }
+    const event = eventOpt.Some;
+    const tickets = eventTickets.values();
+    return tickets
+      .filter((ticket) => {
+        return ticket.eventId === event.id;
+      })
+      .map((ticket) => {
+        const userOpt = usersStorage.get(ticket.userId);
+
+        return {
+          id: ticket.id,
+          eventId: event.id,
+          eventName: event.title,
+          userId: ticket.userId,
+          userName: userOpt.Some.name,
+          userEmail: userOpt.Some.email,
+          userPhone: userOpt.Some.phone,
+        };
+      });
+  }),
+
+  getUserTickets: query([text], Vec(TicketReturn), (id) => {
+    const userOpt = usersStorage.get(id);
+    if ("None" in userOpt) {
+      return [];
+    }
+    const user = userOpt.Some;
+    const tickets = eventTickets.values();
+    return tickets
+      .filter((ticket) => {
+        return ticket.userId === user.id;
+      })
+      .map((ticket) => {
+        const eventOpt = eventsStorage.get(ticket.eventId);
+        const event = eventOpt.Some;
+        return {
+          id: ticket.id,
+          eventId: event.id,
+          eventName: event.title,
+          userId: ticket.userId,
+          userName: user.name,
+          userEmail: user.email,
+          userPhone: user.phone,
+        };
+      });
+  }),
 });
 
 // a workaround to make uuid package work with Azle
