@@ -14,13 +14,9 @@ import {
   Result,
   Canister,
 } from "azle";
-// @ts-ignore
+
 import { v4 as uuidv4 } from "uuid";
 
-/**
- * This type represents a event that can be listed on a eventManager.
- * It contains basic properties that are needed to define a event.
- */
 const Event = Record({
   id: text,
   title: text,
@@ -105,31 +101,14 @@ const TicketReturn = Record({
   userPhone: text,
 });
 
-/**
- * `eventsStorage` - it's a key-value datastructure that is used to store events by sellers.
- * {@link StableBTreeMap} is a self-balancing tree that acts as a durable data storage that keeps data across canister upgrades.
- * For the sake of this contract we've chosen {@link StableBTreeMap} as a storage for the next reasons:
- * - `insert`, `get` and `remove` operations have a constant time complexity - O(1)
- * - data stored in the map survives canister upgrades unlike using HashMap where data is stored in the heap and it's lost after the canister is upgraded
- *
- * Brakedown of the `StableBTreeMap(text, Event)` datastructure:
- * - the key of map is a `eventId`
- * - the value in this map is a event itself `Event` that is related to a given key (`eventId`)
- *
- * Constructor values:
- * 1) 0 - memory id where to initialize a map
- * 2) 16 - it's a max size of the key in bytes.
- * 3) 1024 - it's a max size of the value in bytes.
- * 2 and 3 are not being used directly in the constructor but the Azle compiler utilizes these values during compile time
- */
 const eventsStorage = StableBTreeMap(0, text, Event);
 const eventTickets = StableBTreeMap(2, text, Ticket);
 const usersStorage = StableBTreeMap(3, text, User);
 
 export default Canister({
   addEvent: update([EventPayload], Result(Event, ErrorType), (payload) => {
-    if (typeof payload !== "object" || Object.keys(payload).length === 0) {
-      return Err({ NotFound: "invalid payoad" });
+    if (!payload || typeof payload !== "object" || Object.keys(payload).length === 0) {
+      return Err({ InvalidPayload: "Invalid payload provided" });
     }
     const event = {
       id: uuidv4(),
@@ -148,12 +127,12 @@ export default Canister({
   getEvent: query([text], Result(Event, ErrorType), (id) => {
     const eventOpt = eventsStorage.get(id);
     if ("None" in eventOpt) {
-      return Err({ NotFound: `event with id=${id} not found` });
+      return Err({ NotFound: `Event with id=${id} not found` });
     }
     return Ok(eventOpt.Some);
   }),
 
-  updateEvent: update(
+ updateEvent: update(
     [UpdateEventPayload],
     Result(Event, ErrorType),
     (payload) => {
