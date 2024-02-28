@@ -17,6 +17,11 @@ import {
 
 import { v4 as uuidv4 } from "uuid";
 
+/**
+ * This type represents a event that can be listed on a eventManager.
+ * It contains basic properties that are needed to define a event.
+ */
+
 const Event = Record({
   id: text,
   title: text,
@@ -100,6 +105,24 @@ const TicketReturn = Record({
   userEmail: text,
   userPhone: text,
 });
+
+/**
+ * `eventsStorage` - it's a key-value datastructure that is used to store events by sellers.
+ * {@link StableBTreeMap} is a self-balancing tree that acts as a durable data storage that keeps data across canister upgrades.
+ * For the sake of this contract we've chosen {@link StableBTreeMap} as a storage for the next reasons:
+ * - `insert`, `get` and `remove` operations have a constant time complexity - O(1)
+ * - data stored in the map survives canister upgrades unlike using HashMap where data is stored in the heap and it's lost after the canister is upgraded
+ *
+ * Brakedown of the `StableBTreeMap(text, Event)` datastructure:
+ * - the key of map is a `eventId`
+ * - the value in this map is a event itself `Event` that is related to a given key (`eventId`)
+ *
+ * Constructor values:
+ * 1) 0 - memory id where to initialize a map
+ * 2) 16 - it's a max size of the key in bytes.
+ * 3) 1024 - it's a max size of the value in bytes.
+ * 2 and 3 are not being used directly in the constructor but the Azle compiler utilizes these values during compile time
+ */
 
 const eventsStorage = StableBTreeMap(0, text, Event);
 const eventTickets = StableBTreeMap(2, text, Ticket);
