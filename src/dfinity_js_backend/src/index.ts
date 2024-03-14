@@ -14,13 +14,14 @@ import {
   Result,
   Canister,
 } from "azle";
-// @ts-ignore
+
 import { v4 as uuidv4 } from "uuid";
 
 /**
  * This type represents a event that can be listed on a eventManager.
  * It contains basic properties that are needed to define a event.
  */
+
 const Event = Record({
   id: text,
   title: text,
@@ -122,14 +123,15 @@ const TicketReturn = Record({
  * 3) 1024 - it's a max size of the value in bytes.
  * 2 and 3 are not being used directly in the constructor but the Azle compiler utilizes these values during compile time
  */
+
 const eventsStorage = StableBTreeMap(0, text, Event);
 const eventTickets = StableBTreeMap(2, text, Ticket);
 const usersStorage = StableBTreeMap(3, text, User);
 
 export default Canister({
   addEvent: update([EventPayload], Result(Event, ErrorType), (payload) => {
-    if (typeof payload !== "object" || Object.keys(payload).length === 0) {
-      return Err({ NotFound: "invalid payoad" });
+    if (!payload || typeof payload !== "object" || Object.keys(payload).length === 0) {
+      return Err({ InvalidPayload: "Invalid payload provided" });
     }
     const event = {
       id: uuidv4(),
@@ -148,12 +150,12 @@ export default Canister({
   getEvent: query([text], Result(Event, ErrorType), (id) => {
     const eventOpt = eventsStorage.get(id);
     if ("None" in eventOpt) {
-      return Err({ NotFound: `event with id=${id} not found` });
+      return Err({ NotFound: `Event with id=${id} not found` });
     }
     return Ok(eventOpt.Some);
   }),
 
-  updateEvent: update(
+ updateEvent: update(
     [UpdateEventPayload],
     Result(Event, ErrorType),
     (payload) => {
