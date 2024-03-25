@@ -1,6 +1,5 @@
 import React, { useEffect, useState, useCallback } from "react";
 import { toast } from "react-toastify";
-import AddUser from "./AddUser";
 import User from "./User";
 import Loader from "../utils/Loader";
 import { Row } from "react-bootstrap";
@@ -10,7 +9,8 @@ import {
   createUser,
   updateUser,
 } from "../../utils/userManager";
-import { Link } from "react-router-dom";
+import Header from "../utils/Header";
+import { createAsset } from "../../utils/assetManager";
 
 const Users = () => {
   const [users, setUsers] = useState([]);
@@ -43,6 +43,22 @@ const Users = () => {
     }
   };
 
+  const addAsset = async (data) => {
+    try {
+      setLoading(true);
+      const maxSlotsStr = data.maxSlots;
+      data.maxSlots = parseInt(maxSlotsStr, 10) * 10 ** 8;
+      createAsset(data).then((resp) => {
+        toast(<NotificationSuccess text="Asset added successfully." />);
+      });
+    } catch (error) {
+      console.log({ error });
+      toast(<NotificationError text="Failed to create a asset." />);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const update = async (data) => {
     try {
       setLoading(true);
@@ -64,20 +80,14 @@ const Users = () => {
 
   return (
     <>
+      <Header saveUser={addUser} saveAsset={addAsset} />
       {!loading ? (
-        <>
+        <div
+          style={{ background: "#000", minHeight: "100vh" }}
+          className="container"
+        >
           <div className="d-flex justify-content-between align-items-center mb-4">
             <h1 className="fs-4 fw-bold mb-0">Users Manager</h1>
-            <Link
-              to="/"
-              className="justify-content-start mr-4 py-2 px-3 my-2 bg-secondary text-white rounded-pill "
-            >
-              Events Page
-            </Link>
-            <div className="d-flex align-items-center">
-              <div className="mr-8">Add User</div>
-              <AddUser save={addUser} />
-            </div>
           </div>
           <Row xs={1} sm={2} lg={3} className="g-3  mb-5 g-xl-4 g-xxl-5">
             {users.map((_user, index) => (
@@ -90,7 +100,7 @@ const Users = () => {
               />
             ))}
           </Row>
-        </>
+        </div>
       ) : (
         <Loader />
       )}

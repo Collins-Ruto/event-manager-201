@@ -3,7 +3,7 @@ import PropTypes from "prop-types";
 import { Card, Col, Stack } from "react-bootstrap";
 
 const Ticket = ({ ticket }) => {
-  const { id, eventId, eventName, userId, userName, userEmail, userPhone } =
+  const { id, assetId, assetName, userId, userName, userEmail, userPhone } =
     ticket;
 
   return (
@@ -11,12 +11,12 @@ const Ticket = ({ ticket }) => {
       <Card className=" h-100">
         <Card.Header>
           <Stack direction="horizontal" gap={2}>
-            {eventName}
+            {assetName}
           </Stack>
         </Card.Header>
         <Card.Body className="d-flex  flex-column ">
           <Card.Text className="flex-grow-1 ">TicketId: {id}</Card.Text>
-          <Card.Text className="flex-grow-1 ">eventId: {eventId}</Card.Text>
+          <Card.Text className="flex-grow-1 ">assetId: {assetId}</Card.Text>
           <Card.Text className="flex-grow-1 ">userId: {userId}</Card.Text>
           <Card.Text className="flex-grow-1 ">userName: {userName}</Card.Text>
           <Card.Text className="flex-grow-1 ">userEmail: {userEmail}</Card.Text>

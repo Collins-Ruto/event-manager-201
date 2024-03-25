@@ -6,9 +6,8 @@ const AddUser = ({ save }) => {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
-  const [address, setAddress] = useState("");
 
-  const isFormFilled = () => name && address && phone && email;
+  const isFormFilled = () => name && phone && email;
 
   const [show, setShow] = useState(false);
 
@@ -17,14 +16,9 @@ const AddUser = ({ save }) => {
 
   return (
     <>
-      <Button
-        onClick={handleShow}
-        variant="dark"
-        className="rounded-pill px-0"
-        style={{ width: "38px" }}
-      >
-        <i className="bi bi-plus"></i>
-      </Button>
+      <div onClick={handleShow} className="text-success">
+        <i className="bi bi-plus "></i> Add User
+      </div>
       <Modal show={show} onHide={handleClose} centered>
         <Modal.Header closeButton>
           <Modal.Title>New User</Modal.Title>
@@ -57,29 +51,14 @@ const AddUser = ({ save }) => {
                 }}
               />
             </FloatingLabel>
-
-            <FloatingLabel
-              controlId="inputAddress"
-              label="Address"
-              className="mb-3"
-            >
-              <Form.Control
-                type="text"
-                placeholder="Address"
-                onChange={(e) => {
-                  setAddress(e.target.value);
-                }}
-              />
-            </FloatingLabel>
             <FloatingLabel
               controlId="inputEmail"
               label="Email"
               className="mb-3"
             >
               <Form.Control
-                as="textarea"
+                type="text"
                 placeholder="email"
-                style={{ height: "80px" }}
                 onChange={(e) => {
                   setEmail(e.target.value);
                 }}
@@ -98,7 +77,6 @@ const AddUser = ({ save }) => {
               save({
                 name,
                 phone,
-                address,
                 email,
               });
               handleClose();

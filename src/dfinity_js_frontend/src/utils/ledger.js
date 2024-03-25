@@ -16,7 +16,7 @@ export async function transferICP(sellerAddress, amount, memo) {
 
 export async function balance() {
   const canister = window.canister.ledger;
-  const address = await window.canister.eventManager.getAddressFromPrincipal(
+  const address = await window.canister.assetManager.getAddressFromPrincipal(
     window.auth.principal
   );
   const balance = await canister.account_balance_dfx({ account: address });

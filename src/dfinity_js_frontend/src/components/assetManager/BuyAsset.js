@@ -2,10 +2,10 @@ import React, { useState } from "react";
 import PropTypes from "prop-types";
 import { Button, Modal, Form, FloatingLabel } from "react-bootstrap";
 
-const ReserveTicket = ({ reserve, available }) => {
-  const [userId, setUserId] = useState("");
+const BuyAsset = ({ assetId, buy, available }) => {
+  const [units, setUnits] = useState("");
 
-  const isFormFilled = () => userId;
+  const isFormFilled = () => units;
 
   const [show, setShow] = useState(false);
 
@@ -16,7 +16,7 @@ const ReserveTicket = ({ reserve, available }) => {
     <>
       {!available ? (
         <Button disabled={true} variant="outline-dark" className="w-100 py-3">
-          No Slots available
+          Not available
         </Button>
       ) : (
         <>
@@ -25,25 +25,25 @@ const ReserveTicket = ({ reserve, available }) => {
             variant="outline-dark"
             className="w-100 py-3"
           >
-            Reserve Ticket
+            Buy Asset
           </Button>
           <Modal show={show} onHide={handleClose} centered>
             <Modal.Header closeButton>
-              <Modal.Title>New Event</Modal.Title>
+              <Modal.Title>New Asset</Modal.Title>
             </Modal.Header>
             <Form>
               <Modal.Body>
                 <FloatingLabel
-                  controlId="inputUserId"
-                  label="userId"
+                  controlId="inputUnits"
+                  label="units"
                   className="mb-3"
                 >
                   <Form.Control
                     type="text"
                     onChange={(e) => {
-                      setUserId(e.target.value);
+                      setUnits(e.target.value);
                     }}
-                    placeholder="Enter your userId"
+                    placeholder="Number of Units"
                   />
                 </FloatingLabel>
               </Modal.Body>
@@ -56,11 +56,12 @@ const ReserveTicket = ({ reserve, available }) => {
                 variant="dark"
                 disabled={!isFormFilled()}
                 onClick={() => {
-                  reserve(userId);
+                  const unitsInt = parseInt(units, 10);
+                  buy(assetId, unitsInt);
                   handleClose();
                 }}
               >
-                Reserve Ticket
+                Buy Asset
               </Button>
             </Modal.Footer>
           </Modal>
@@ -70,8 +71,8 @@ const ReserveTicket = ({ reserve, available }) => {
   );
 };
 
-ReserveTicket.propTypes = {
-  reserve: PropTypes.func.isRequired,
+BuyAsset.propTypes = {
+  buy: PropTypes.func.isRequired,
 };
 
-export default ReserveTicket;
+export default BuyAsset;

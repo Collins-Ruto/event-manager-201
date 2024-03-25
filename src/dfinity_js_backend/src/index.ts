@@ -9,80 +9,110 @@ import {
   Ok,
   Err,
   ic,
+  Opt,
+  None,
+  Some,
   Principal,
+  Duration,
   nat64,
+  bool,
   Result,
   Canister,
 } from "azle";
+import {
+  Ledger,
+  binaryAddressFromAddress,
+  binaryAddressFromPrincipal,
+  hexAddressFromPrincipal,
+} from "azle/canisters/ledger";
+//@ts-ignore
+import { hashCode } from "hashcode";
+// Importing UUID v4 for generating unique identifiers
 // @ts-ignore
 import { v4 as uuidv4 } from "uuid";
 
 /**
- * This type represents a event that can be listed on a eventManager.
- * It contains basic properties that are needed to define a event.
+ * This type represents an asset that can be listed on an asset manager.
+ * It contains basic properties needed to define an asset.
  */
-const Event = Record({
+const Asset = Record({
   id: text,
-  title: text,
+  name: text,
   description: text,
-  date: text,
-  startTime: text,
-  attachmentURL: text,
-  location: text,
-  seller: Principal,
-  maxSlots: nat64,
-  reservedAmount: nat64,
+  image: text,
+  createdAt: text,
+  updatedAt: Opt(text),
+  assetType: text,
+  isTokenized: text,
+  owner: Principal,
+  availableUnits: nat64,
+  pricePerUnit: nat64,
 });
 
-const EventPayload = Record({
-  title: text,
+// Payload structure for creating an asset
+const AssetPayload = Record({
+  name: text,
   description: text,
-  location: text,
-  startTime: text,
-  attachmentURL: text,
-  maxSlots: nat64,
-  date: text,
+  image: text,
+  assetType: text,
+  isTokenized: text,
+  availableUnits: nat64,
+  pricePerUnit: nat64,
 });
 
-const UpdateEventPayload = Record({
+// Payload structure for updating an asset
+const UpdateAssetPayload = Record({
   id: text,
   description: text,
-  location: text,
-  startTime: text,
-  attachmentURL: text,
-  maxSlots: nat64,
-  date: text,
+  image: text,
+  isTokenized: text,
 });
 
+// Structure representing a ticket
 const Ticket = Record({
   id: text,
-  eventId: text,
+  assetId: text,
   userId: text,
 });
 
+// Structure representing a user
 const User = Record({
   id: text,
+  principal: Principal,
   name: text,
   email: text,
   phone: text,
-  address: text,
-  tickets: Vec(text),
+  assets: Vec(Asset),
 });
 
+// Payload structure for creating a user
 const UserPayload = Record({
   name: text,
   email: text,
   phone: text,
-  address: text,
 });
 
+// Payload structure for updating a user
 const UpdateUserPayload = Record({
   id: text,
   email: text,
   phone: text,
-  address: text,
 });
 
+export const PaymentStatus = Variant({
+  PaymentPending: text,
+  Completed: text,
+});
+
+export const ReservePayment = Record({
+  price: nat64,
+  status: text,
+  seller: Principal,
+  paid_at_block: Opt(nat64),
+  memo: nat64,
+});
+
+// Variant representing different error types
 const ErrorType = Variant({
   NotFound: text,
   InvalidPayload: text,
@@ -90,104 +120,111 @@ const ErrorType = Variant({
   PaymentCompleted: text,
 });
 
-const TicketPayload = Record({
-  eventId: text,
-  userId: text,
-});
-
-const TicketReturn = Record({
-  id: text,
-  eventId: text,
-  eventName: text,
-  userId: text,
-  userName: text,
-  userEmail: text,
-  userPhone: text,
-});
-
 /**
- * `eventsStorage` - it's a key-value datastructure that is used to store events by sellers.
- * {@link StableBTreeMap} is a self-balancing tree that acts as a durable data storage that keeps data across canister upgrades.
- * For the sake of this contract we've chosen {@link StableBTreeMap} as a storage for the next reasons:
- * - `insert`, `get` and `remove` operations have a constant time complexity - O(1)
- * - data stored in the map survives canister upgrades unlike using HashMap where data is stored in the heap and it's lost after the canister is upgraded
+ * `assetsStorage` - a key-value data structure used to store assets by owners.
+ * {@link StableBTreeMap} is a self-balancing tree that acts as durable data storage across canister upgrades.
+ * For this contract, `StableBTreeMap` is chosen for the following reasons:
+ * - `insert`, `get`, and `remove` operations have constant time complexity (O(1)).
+ * - Data stored in the map survives canister upgrades, unlike using HashMap where data is lost after an upgrade.
  *
- * Brakedown of the `StableBTreeMap(text, Event)` datastructure:
- * - the key of map is a `eventId`
- * - the value in this map is a event itself `Event` that is related to a given key (`eventId`)
+ * Breakdown of the `StableBTreeMap(text, Asset)` data structure:
+ * - The key of the map is an `assetId`.
+ * - The value in this map is an asset (`Asset`) related to a given key (`assetId`).
  *
  * Constructor values:
- * 1) 0 - memory id where to initialize a map
- * 2) 16 - it's a max size of the key in bytes.
- * 3) 1024 - it's a max size of the value in bytes.
- * 2 and 3 are not being used directly in the constructor but the Azle compiler utilizes these values during compile time
+ * 1) 0 - memory id where to initialize a map.
+ * 2) 16 - maximum size of the key in bytes.
+ * 3) 1024 - maximum size of the value in bytes.
+ * Values 2 and 3 are not used directly in the constructor but are utilized by the Azle compiler during compile time.
  */
-const eventsStorage = StableBTreeMap(0, text, Event);
-const eventTickets = StableBTreeMap(2, text, Ticket);
+const assetsStorage = StableBTreeMap(0, text, Asset);
+const assetTickets = StableBTreeMap(2, text, Ticket);
 const usersStorage = StableBTreeMap(3, text, User);
+const pendingPayments = StableBTreeMap(4, nat64, ReservePayment);
+const persistedPayments = StableBTreeMap(7, Principal, ReservePayment);
 
+const PAYMENT_RESERVATION_PERIOD = 120n; // reservation period in seconds
+
+const icpCanister = Ledger(Principal.fromText("ryjl3-tyaaa-aaaaa-aaaba-cai"));
+
+// Exporting default Canister module
 export default Canister({
-  addEvent: update([EventPayload], Result(Event, ErrorType), (payload) => {
+  // Function to add an asset
+  addAsset: update([AssetPayload], Result(Asset, ErrorType), (payload) => {
+    // Check if the payload is a valid object
     if (typeof payload !== "object" || Object.keys(payload).length === 0) {
-      return Err({ NotFound: "invalid payoad" });
+      return Err({ NotFound: "invalid payload" });
     }
-    const event = {
+    // Create an asset with a unique id generated using UUID v4
+    const asset = {
       id: uuidv4(),
-      reservedAmount: 0n,
-      seller: ic.caller(),
+      owner: ic.caller(),
+      createdAt: new Date().toISOString(),
+      updatedAt: None,
       ...payload,
     };
-    eventsStorage.insert(event.id, event);
-    return Ok(event);
+    // Insert the asset into the assetsStorage
+    assetsStorage.insert(asset.id, asset);
+    return Ok(asset);
   }),
 
-  getEvents: query([], Vec(Event), () => {
-    return eventsStorage.values();
+  // get all assets
+  getAssets: query([], Vec(Asset), () => {
+    return assetsStorage.values();
   }),
 
-  getEvent: query([text], Result(Event, ErrorType), (id) => {
-    const eventOpt = eventsStorage.get(id);
-    if ("None" in eventOpt) {
-      return Err({ NotFound: `event with id=${id} not found` });
+  // Function get asset by id
+  getAsset: query([text], Result(Asset, ErrorType), (id) => {
+    const assetOpt = assetsStorage.get(id);
+    if ("None" in assetOpt) {
+      return Err({ NotFound: `asset with id=${id} not found` });
     }
-    return Ok(eventOpt.Some);
+    return Ok(assetOpt.Some);
   }),
 
-  updateEvent: update(
-    [UpdateEventPayload],
-    Result(Event, ErrorType),
+  // Function to update an asset
+  updateAsset: update(
+    [UpdateAssetPayload],
+    Result(Asset, ErrorType),
     (payload) => {
-      const eventOpt = eventsStorage.get(payload.id);
-      if ("None" in eventOpt) {
-        return Err({ NotFound: `event with id=${payload.id} not found` });
+      const assetOpt = assetsStorage.get(payload.id);
+      if ("None" in assetOpt) {
+        return Err({ NotFound: `asset with id=${payload.id} not found` });
       }
-      const event = eventOpt.Some;
-      const updatedEvent = {
-        ...event,
+      const asset = assetOpt.Some;
+      const updatedAsset = {
+        ...asset,
         ...payload,
       };
-      eventsStorage.insert(event.id, updatedEvent);
-      return Ok(updatedEvent);
+      assetsStorage.insert(asset.id, updatedAsset);
+      return Ok(updatedAsset);
     }
   ),
 
+  // Function to add a user
   addUser: update([UserPayload], Result(User, ErrorType), (payload) => {
+    // Check if the payload is a valid object
     if (typeof payload !== "object" || Object.keys(payload).length === 0) {
-      return Err({ NotFound: "invalid payoad" });
+      return Err({ NotFound: "invalid payload" });
     }
+    // Create a user with a unique id generated using UUID v4
     const user = {
       id: uuidv4(),
-      tickets: [],
+      principal: ic.caller(),
+      assets: [],
       ...payload,
     };
+    // Insert the user into the usersStorage
     usersStorage.insert(user.id, user);
     return Ok(user);
   }),
 
+  // get all users
   getUsers: query([], Vec(User), () => {
     return usersStorage.values();
   }),
 
+  // Function get user by id
   getUser: query([text], Result(User, ErrorType), (id) => {
     const userOpt = usersStorage.get(id);
     if ("None" in userOpt) {
@@ -195,25 +232,24 @@ export default Canister({
     }
     return Ok(userOpt.Some);
   }),
-  
-  // get events reserved by user
-  getUserEvents: query([text], Vec(Event), (id) => {
+
+  // get assets reserved by a user
+  getUserAssets: query([text], Vec(Asset), (id) => {
     const userOpt = usersStorage.get(id);
     if ("None" in userOpt) {
       return [];
     }
     const user = userOpt.Some;
-    const tickets = eventTickets.values();
-    return tickets
-      .filter((ticket) => {
-        return ticket.userId === user.id;
-      })
-      .map((ticket) => {
-        const eventOpt = eventsStorage.get(ticket.eventId);
-        return eventOpt.Some;
-      });
+    return user.assets.map((assetId: string) => {
+      const assetOpt = assetsStorage.get(assetId);
+      if ("None" in assetOpt) {
+        return None;
+      }
+      return Some(assetOpt.Some);
+    });
   }),
 
+  // Function to update a user
   updateUser: update(
     [UpdateUserPayload],
     Result(User, ErrorType),
@@ -232,132 +268,157 @@ export default Canister({
     }
   ),
 
-  createTicket: update(
-    [TicketPayload],
-    Result(TicketReturn, ErrorType),
-    (payload) => {
-      const eventOpt = eventsStorage.get(payload.eventId);
-      const userOpt = usersStorage.get(payload.userId);
-      if ("None" in userOpt) {
+  createReservePay: update(
+    [text, nat64],
+    Result(ReservePayment, ErrorType),
+    (assetId, amount) => {
+      const assetOpt = assetsStorage.get(assetId);
+      if ("None" in assetOpt) {
         return Err({
-          NotFound: `user=${payload.userId} not found`,
+          NotFound: `cannot reserve Payment: Asset  with id=${assetId} not available`,
         });
       }
-      if ("None" in eventOpt) {
-        return Err({
-          NotFound: `event=${payload.eventId} not found`,
-        });
-      }
-      const event = eventOpt.Some;
-      const ticket = {
-        id: uuidv4(),
-        eventId: event.id,
-        userId: payload.userId,
+      const asset = assetOpt.Some;
+
+      const cost = asset.pricePerUnit * amount;
+
+      const sellerOwner = asset.owner;
+
+      console.log("cor Id", assetId);
+      const reservePayment = {
+        price: cost,
+        status: "pending",
+        seller: sellerOwner,
+        paid_at_block: None,
+        memo: generateCorrelationId(assetId),
       };
 
-      const returnTicket = {
-        id: ticket.id,
-        eventId: event.id,
-        eventName: event.title,
-        userId: payload.userId,
-        userName: userOpt.Some.name,
-        userEmail: userOpt.Some.email,
-        userPhone: userOpt.Some.phone,
+      // reduce the available units
+      const updatedAsset = {
+        ...asset,
+        availableUnits: asset.availableUnits - amount,
       };
 
-      // add ticket to the user
-      const user = userOpt.Some;
-      const updatedUser = {
-        ...user,
-        tickets: user.tickets.concat(ticket.id),
-      };
+      // add asset to the user
 
-      // increase event sold ticket count
-      event.reservedAmount += 1n;
+      assetsStorage.insert(asset.id, updatedAsset);
 
-      try {
-        // update event in storage
-        eventsStorage.insert(event.id, event);
-        eventTickets.insert(ticket.id, ticket);
-        usersStorage.insert(payload.userId, updatedUser);
-      } catch (error) {
-        return Err({
-          NotFound: `cannot create ticket, err=${error}`,
-        });
-      }
-
-      return Ok(returnTicket);
+      console.log("reservePayment", reservePayment);
+      pendingPayments.insert(reservePayment.memo, reservePayment);
+      discardByTimeout(reservePayment.memo, PAYMENT_RESERVATION_PERIOD);
+      return Ok(reservePayment);
     }
   ),
 
-  getTickets: query([], Vec(Ticket), () => {
-    return eventTickets.values();
-  }),
-
-  // get tickets per event
-  getEventTickets: query([text], Vec(TicketReturn), (id) => {
-    const eventOpt = eventsStorage.get(id);
-    if ("None" in eventOpt) {
-      return [];
+  completePayment: update(
+    [Principal, text, nat64, nat64, nat64],
+    Result(ReservePayment, ErrorType),
+    async (reservor, assetId, reservePrice, block, memo) => {
+      const paymentVerified = await verifyPaymentInternal(
+        reservor,
+        reservePrice,
+        block,
+        memo
+      );
+      if (!paymentVerified) {
+        return Err({
+          NotFound: `cannot complete the reserve: cannot verify the payment, memo=${memo}`,
+        });
+      }
+      const pendingReservePayOpt = pendingPayments.remove(memo);
+      if ("None" in pendingReservePayOpt) {
+        return Err({
+          NotFound: `cannot complete the reserve: there is no pending reserve with id=${assetId}`,
+        });
+      }
+      const reservedPay = pendingReservePayOpt.Some;
+      const updatedReservePayment = {
+        ...reservedPay,
+        status: "completed",
+        paid_at_block: Some(block),
+      };
+      const assetOpt = assetsStorage.get(assetId);
+      if ("None" in assetOpt) {
+        throw Error(`Book with id=${assetId} not found`);
+      }
+      const asset = assetOpt.Some;
+      assetsStorage.insert(asset.id, asset);
+      persistedPayments.insert(ic.caller(), updatedReservePayment);
+      return Ok(updatedReservePayment);
     }
-    const event = eventOpt.Some;
-    const tickets = eventTickets.values();
-    return tickets
-      .filter((ticket) => {
-        return ticket.eventId === event.id;
-      })
-      .map((ticket) => {
-        const userOpt = usersStorage.get(ticket.userId);
+  ),
 
-        return {
-          id: ticket.id,
-          eventId: event.id,
-          eventName: event.title,
-          userId: ticket.userId,
-          userName: userOpt.Some.name,
-          userEmail: userOpt.Some.email,
-          userPhone: userOpt.Some.phone,
-        };
-      });
-  }),
-
-  getUserTickets: query([text], Vec(TicketReturn), (id) => {
-    const userOpt = usersStorage.get(id);
-    if ("None" in userOpt) {
-      return [];
+  verifyPayment: query(
+    [Principal, nat64, nat64, nat64],
+    bool,
+    async (receiver, amount, block, memo) => {
+      return await verifyPaymentInternal(receiver, amount, block, memo);
     }
-    const user = userOpt.Some;
-    const tickets = eventTickets.values();
-    return tickets
-      .filter((ticket) => {
-        return ticket.userId === user.id;
-      })
-      .map((ticket) => {
-        const eventOpt = eventsStorage.get(ticket.eventId);
-        const event = eventOpt.Some;
-        return {
-          id: ticket.id,
-          eventId: event.id,
-          eventName: event.title,
-          userId: ticket.userId,
-          userName: user.name,
-          userEmail: user.email,
-          userPhone: user.phone,
-        };
-      });
+  ),
+
+  /*
+        a helper function to get address from the principal
+        the address is later used in the transfer method
+    */
+  getAddressFromPrincipal: query([Principal], text, (principal) => {
+    return hexAddressFromPrincipal(principal, 0);
   }),
 });
 
-// a workaround to make uuid package work with Azle
+/*
+    a hash function that is used to generate correlation ids for assets.
+    also, we use that in the verifyPayment function where we check if the used has actually paid the asset
+*/
+function hash(input: any): nat64 {
+  return BigInt(Math.abs(hashCode().value(input)));
+}
+
+// A workaround to make the uuid package work with Azle
 globalThis.crypto = {
   // @ts-ignore
   getRandomValues: () => {
     let array = new Uint8Array(32);
-
     for (let i = 0; i < array.length; i++) {
       array[i] = Math.floor(Math.random() * 256);
     }
-
     return array;
   },
 };
+
+// HELPER FUNCTIONS
+function generateCorrelationId(assetId: text): nat64 {
+  const correlationId = `${assetId}_${ic.caller().toText()}_${ic.time()}`;
+  return hash(correlationId);
+}
+
+function discardByTimeout(memo: nat64, delay: Duration) {
+  ic.setTimer(delay, () => {
+    const asset = pendingPayments.remove(memo);
+    console.log(`Reserve discarded ${asset}`);
+  });
+}
+async function verifyPaymentInternal(
+  receiver: Principal,
+  amount: nat64,
+  block: nat64,
+  memo: nat64
+): Promise<bool> {
+  const blockData = await ic.call(icpCanister.query_blocks, {
+    args: [{ start: block, length: 1n }],
+  });
+  const tx = blockData.blocks.find((block) => {
+    if ("None" in block.transaction.operation) {
+      return false;
+    }
+    const operation = block.transaction.operation.Some;
+    const senderAddress = binaryAddressFromPrincipal(ic.caller(), 0);
+    const receiverAddress = binaryAddressFromPrincipal(receiver, 0);
+    return (
+      block.transaction.memo === memo &&
+      hash(senderAddress) === hash(operation.Transfer?.from) &&
+      hash(receiverAddress) === hash(operation.Transfer?.to) &&
+      amount === operation.Transfer?.amount.e8s
+    );
+  });
+  return tx ? true : false;
+}

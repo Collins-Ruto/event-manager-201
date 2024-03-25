@@ -2,12 +2,13 @@ import React, { useState } from "react";
 import PropTypes from "prop-types";
 import { Button, Modal, Form, FloatingLabel } from "react-bootstrap";
 
-const UpdateUser = ({ save }) => {
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [phone, setPhone] = useState("");
-
-  const isFormFilled = () => name && phone && email;
+const UpdateAsset = ({ save }) => {
+  const [description, setDescription] = useState("");
+  const [isTokenized, setIsTokenized] = useState("");
+  const [image, setimage] = useState("");
+  const [pricePerUnit, setPricePerUnit] = useState(0);
+  const isFormFilled = () =>
+    isTokenized && image && description && pricePerUnit;
 
   const [show, setShow] = useState(false);
 
@@ -25,47 +26,61 @@ const UpdateUser = ({ save }) => {
       </button>
       <Modal show={show} onHide={handleClose} centered>
         <Modal.Header closeButton>
-          <Modal.Title>New User</Modal.Title>
+          <Modal.Title>New Asset</Modal.Title>
         </Modal.Header>
         <Form>
           <Modal.Body>
             <FloatingLabel
-              controlId="inputName"
-              label="User name"
+              controlId="inputImage"
+              label="image"
               className="mb-3"
             >
               <Form.Control
                 type="text"
+                placeholder="image"
                 onChange={(e) => {
-                  setName(e.target.value);
+                  setimage(e.target.value);
                 }}
-                placeholder="Enter name of user"
               />
             </FloatingLabel>
+
             <FloatingLabel
-              controlId="inputPhone"
-              label="Phone"
+              controlId="isTokenized"
+              label="Is Tokenized"
               className="mb-3"
             >
               <Form.Control
-                type="number"
-                placeholder="Phone"
+                type="text"
+                placeholder="Is Tokenized"
                 onChange={(e) => {
-                  setPhone(e.target.value);
+                  setIsTokenized(e.target.value);
                 }}
               />
             </FloatingLabel>
             <FloatingLabel
-              controlId="inputEmail"
-              label="Email"
+              controlId="inputDescription"
+              label="Description"
               className="mb-3"
             >
               <Form.Control
                 as="textarea"
-                placeholder="email"
+                placeholder="description"
                 style={{ height: "80px" }}
                 onChange={(e) => {
-                  setEmail(e.target.value);
+                  setDescription(e.target.value);
+                }}
+              />
+            </FloatingLabel>
+            <FloatingLabel
+              controlId="inputPricePerUnit"
+              label="pricePerUnit"
+              className="mb-3"
+            >
+              <Form.Control
+                type="number"
+                placeholder="pricePerUnit"
+                onChange={(e) => {
+                  setPricePerUnit(e.target.value);
                 }}
               />
             </FloatingLabel>
@@ -80,14 +95,15 @@ const UpdateUser = ({ save }) => {
             disabled={!isFormFilled()}
             onClick={() => {
               save({
-                name,
-                phone,
-                email,
+                description,
+                isTokenized,
+                image,
+                pricePerUnit,
               });
               handleClose();
             }}
           >
-            Save Updates
+            Save asset
           </Button>
         </Modal.Footer>
       </Modal>
@@ -95,8 +111,8 @@ const UpdateUser = ({ save }) => {
   );
 };
 
-UpdateUser.propTypes = {
+UpdateAsset.propTypes = {
   save: PropTypes.func.isRequired,
 };
 
-export default UpdateUser;
+export default UpdateAsset;

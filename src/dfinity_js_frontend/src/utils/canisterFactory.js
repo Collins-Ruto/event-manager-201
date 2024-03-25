@@ -1,13 +1,13 @@
 import { HttpAgent, Actor } from "@dfinity/agent";
-import { idlFactory as eventManagerIDL } from "../../../declarations/dfinity_js_backend/dfinity_js_backend.did.js";
+import { idlFactory as assetManagerIDL } from "../../../declarations/dfinity_js_backend/dfinity_js_backend.did.js";
 import { idlFactory as ledgerIDL } from "../../../declarations/ledger_canister/ledger_canister.did.js";
 
-const eventManager_CANISTER_ID = "be2us-64aaa-aaaaa-qaabq-cai";
+const assetManager_CANISTER_ID = "be2us-64aaa-aaaaa-qaabq-cai";
 const LEDGER_CANISTER_ID = "ryjl3-tyaaa-aaaaa-aaaba-cai";
 const HOST = "http://localhost:4943";
 
-export async function geteventManagerCanister() {
-  return await getCanister(eventManager_CANISTER_ID, eventManagerIDL);
+export async function getassetManagerCanister() {
+  return await getCanister(assetManager_CANISTER_ID, assetManagerIDL);
 }
 
 export async function getLedgerCanister() {

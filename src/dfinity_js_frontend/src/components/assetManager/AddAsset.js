@@ -2,22 +2,22 @@ import React, { useState } from "react";
 import PropTypes from "prop-types";
 import { Button, Modal, Form, FloatingLabel } from "react-bootstrap";
 
-const AddEvent = ({ save }) => {
-  const [title, setTitle] = useState("");
+const AddAsset = ({ save }) => {
+  const [name, setName] = useState("");
+  const [image, setImage] = useState("");
   const [description, setDescription] = useState("");
-  const [date, setDate] = useState("");
-  const [startTime, setStartTime] = useState("");
-  const [attachmentURL, setImage] = useState("");
-  const [location, setLocation] = useState("");
-  const [maxSlots, setMaxSlots] = useState(0);
+  const [isTokenized, setIsTokenized] = useState("");
+  const [assetType, setassetType] = useState("");
+  const [availableUnits, setAvailableUnits] = useState("");
+  const [pricePerUnit, setPricePerUnit] = useState(0);
   const isFormFilled = () =>
-    title &&
-    startTime &&
-    date &&
-    attachmentURL &&
+    name &&
+    image &&
+    isTokenized &&
+    assetType &&
     description &&
-    maxSlots &&
-    location;
+    pricePerUnit &&
+    availableUnits;
 
   const [show, setShow] = useState(false);
 
@@ -26,67 +26,70 @@ const AddEvent = ({ save }) => {
 
   return (
     <>
-      <Button
-        onClick={handleShow}
-        variant="dark"
-        className="rounded-pill px-0"
-        style={{ width: "38px" }}
-      >
-        <i className="bi bi-plus"></i>
-      </Button>
+      <div onClick={handleShow} className="text-success">
+        <i className="bi bi-plus"></i> Add Asset
+      </div>
       <Modal show={show} onHide={handleClose} centered>
         <Modal.Header closeButton>
-          <Modal.Title>New Event</Modal.Title>
+          <Modal.Title>New Asset</Modal.Title>
         </Modal.Header>
         <Form>
           <Modal.Body>
             <FloatingLabel
               controlId="inputName"
-              label="Event title"
+              label="Asset name"
               className="mb-3"
             >
               <Form.Control
                 type="text"
                 onChange={(e) => {
-                  setTitle(e.target.value);
+                  setName(e.target.value);
                 }}
-                placeholder="Enter title of event"
+                placeholder="Enter name of asset"
               />
             </FloatingLabel>
             <FloatingLabel
-              controlId="inputUrl"
-              label="Image URL"
+              controlId="inputAssetType"
+              label="assetType"
               className="mb-3"
             >
               <Form.Control
                 type="text"
-                placeholder="Image URL"
+                placeholder="assetType"
+                onChange={(e) => {
+                  setassetType(e.target.value);
+                }}
+              />
+            </FloatingLabel>
+            <FloatingLabel
+              controlId="inputImage"
+              label="Image"
+              className="mb-3"
+            >
+              <Form.Control
+                type="text"
                 onChange={(e) => {
                   setImage(e.target.value);
                 }}
-              />
-            </FloatingLabel>
-            <FloatingLabel controlId="inputDate" label="Date" className="mb-3">
-              <Form.Control
-                type="date"
-                placeholder="Date"
-                onChange={(e) => {
-                  setDate(e.target.value);
-                }}
+                placeholder="Enter image url"
               />
             </FloatingLabel>
             <FloatingLabel
-              controlId="inputTime"
-              label="Start Time"
+              controlId="isTokenized"
+              label="Is Tokenized"
               className="mb-3"
             >
-              <Form.Control
-                type="time"
-                placeholder="Start Time"
+              <select
                 onChange={(e) => {
-                  setStartTime(e.target.value);
+                  setIsTokenized(e.target.value);
                 }}
-              />
+                className="form-select"
+                aria-label="Default select example"
+              >
+                <option defaultValue="">select</option>
+                <option value={"true"}>True</option>
+                <option value={"false"}>False</option>
+              </select>
             </FloatingLabel>
             <FloatingLabel
               controlId="inputDescription"
@@ -103,28 +106,28 @@ const AddEvent = ({ save }) => {
               />
             </FloatingLabel>
             <FloatingLabel
-              controlId="inputLocation"
-              label="Location"
-              className="mb-3"
-            >
-              <Form.Control
-                type="text"
-                placeholder="Location"
-                onChange={(e) => {
-                  setLocation(e.target.value);
-                }}
-              />
-            </FloatingLabel>
-            <FloatingLabel
-              controlId="inputMaxSlots"
-              label="maxSlots"
+              controlId="inputAvailableUnits"
+              label="AvailableUnits"
               className="mb-3"
             >
               <Form.Control
                 type="number"
-                placeholder="maxSlots"
+                placeholder="AvailableUnits"
                 onChange={(e) => {
-                  setMaxSlots(e.target.value);
+                  setAvailableUnits(e.target.value);
+                }}
+              />
+            </FloatingLabel>
+            <FloatingLabel
+              controlId="inputPricePerUnit"
+              label="pricePerUnit"
+              className="mb-3"
+            >
+              <Form.Control
+                type="number"
+                placeholder="pricePerUnit"
+                onChange={(e) => {
+                  setPricePerUnit(e.target.value);
                 }}
               />
             </FloatingLabel>
@@ -139,18 +142,18 @@ const AddEvent = ({ save }) => {
             disabled={!isFormFilled()}
             onClick={() => {
               save({
-                title,
+                name,
+                image,
                 description,
-                location,
-                startTime,
-                attachmentURL,
-                maxSlots,
-                date,
+                availableUnits,
+                isTokenized,
+                assetType,
+                pricePerUnit,
               });
               handleClose();
             }}
           >
-            Save event
+            Save asset
           </Button>
         </Modal.Footer>
       </Modal>
@@ -158,8 +161,8 @@ const AddEvent = ({ save }) => {
   );
 };
 
-AddEvent.propTypes = {
+AddAsset.propTypes = {
   save: PropTypes.func.isRequired,
 };
 
-export default AddEvent;
+export default AddAsset;

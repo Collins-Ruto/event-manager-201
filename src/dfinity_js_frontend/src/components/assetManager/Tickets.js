@@ -3,17 +3,17 @@ import Ticket from "./Ticket";
 import Loader from "../utils/Loader";
 import { Row } from "react-bootstrap";
 import { Link } from "react-router-dom";
-import { getEventTickets as getEventTicketList } from "../../utils/eventManager";
+import { getAssetTickets as getAssetTicketList } from "../../utils/assetManager";
 
-const Tickets = ({ eventId }) => {
+const Tickets = ({ assetId }) => {
   const [tickets, setTickets] = useState([]);
   const [loading, setLoading] = useState(false);
 
   // function to get the list of tickets
-  const getEventTickets = useCallback(async () => {
+  const getAssetTickets = useCallback(async () => {
     try {
       setLoading(true);
-      setTickets(await getEventTicketList(eventId));
+      setTickets(await getAssetTicketList(assetId));
     } catch (error) {
       console.log({ error });
     } finally {
@@ -22,7 +22,7 @@ const Tickets = ({ eventId }) => {
   });
 
   useEffect(() => {
-    getEventTickets();
+    getAssetTickets();
   }, []);
 
   return (
@@ -35,7 +35,7 @@ const Tickets = ({ eventId }) => {
               to="/"
               className="justify-content-start mr-4 py-2 px-3 my-2 bg-secondary text-white rounded-pill "
             >
-              Events Page
+              Assets Page
             </Link>
             <Link
               to="/users"

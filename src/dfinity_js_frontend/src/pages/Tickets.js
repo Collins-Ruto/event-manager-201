@@ -5,12 +5,12 @@ import Wallet from "../components/Wallet";
 import Cover from "../components/utils/Cover";
 import coverImg from "../assets/img/cover.jpg";
 import { Notification } from "../components/utils/Notifications";
-import Tickets from "../components/eventManager/Tickets";
+import Tickets from "../components/assetManager/Tickets";
 
 const TicketsPage = () => {
   const urlParams = new URLSearchParams(window.location.search);
-  const eventId = urlParams.get("eventId");
-  console.log(eventId);
+  const assetId = urlParams.get("assetId");
+  console.log(assetId);
 
   const isAuthenticated = window.auth.isAuthenticated;
 
@@ -20,7 +20,11 @@ const TicketsPage = () => {
     <>
       <Notification />
       {isAuthenticated ? (
-        <Container fluid="md">
+        <Container
+          fluid="md"
+          className="bg-gray-800"
+          style={{ background: "#000", minHeight: "100vh" }}
+        >
           <Nav className="justify-content-end pt-3 pb-5">
             <Nav.Item>
               <Wallet
@@ -32,7 +36,7 @@ const TicketsPage = () => {
             </Nav.Item>
           </Nav>
           <main>
-            <Tickets eventId={eventId} />
+            <Tickets assetId={assetId} />
           </main>
         </Container>
       ) : (
